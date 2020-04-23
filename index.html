@@ -5,18 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://www.paypalobjects.com/api/checkout.js"></script>
     <!-- Load the required components. -->
-<script src="https://js.braintreegateway.com/web/3.25.0/js/client.min.js"></script>
-<script src="https://js.braintreegateway.com/web/3.25.0/js/paypal-checkout.min.js"></script>
-<script src="https://js.braintreegateway.com/web/3.25.0/js/data-collector.min.js"></script>
+<script src="https://js.braintreegateway.com/web/3.60.0/js/client.min.js"></script>
+<script src="https://js.braintreegateway.com/web/3.60.0/js/paypal-checkout.min.js"></script>
+<script src="https://js.braintreegateway.com/web/3.60.0/js/data-collector.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 </head>
 
 <body>
-    <div id="paypal-button"></div><br>
+    <div id="paypal-button" style="display: none;"></div><br>
     <div id="result"></div><br>
     <div id="sale_result"></div><br>
 
 <script type="text/javascript">
+    
     $.get( "getToken.php", function( data ) {
         console.log(data);
         var clientToken = data;
@@ -91,6 +92,16 @@ shippingAddressOverride: {
          }
 					});
 				      },
+					validate: function(actions) {
+    						console.log("validate called");
+						document.getElementById("paypal-button").style.display='';
+    						//actions.disable(); // Allow for validation in onClick()
+    						paypalActions = actions; // Save for later enable()/disable() calls
+  					},
+				        onClick:function (){
+						console.log('onClick called')
+						//paypalActions.enable();
+					},
 
 				      onAuthorize: function (data, actions) {
 					console.log(data);
@@ -130,7 +141,9 @@ shippingAddressOverride: {
 					console.error('checkout.js error', err);
 				      }
 				    }, '#paypal-button').then(function () {
-    					console.log($('#paypal-button'));
+					//console.log('finish rendering');
+					//document.getElementById("paypal-button").style.display='';
+    					//console.log($('#paypal-button'));
 				      // The PayPal button will be rendered in an html element with the id
 				      // `paypal-button`. This function will be called when the PayPal button
 				      // is set up and ready to be used.

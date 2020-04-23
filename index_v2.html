@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://www.paypal.com/sdk/js?client-id=AfZ3B_U6qEtvXCTulLxrXoOtpAop9M3gA-mAxR58_aygJiSbNciYFDTf4DP3DkP1Au3qSHhdeKHnPLtG"></script>
+    <!-- Load the required components. -->
+<script src="https://js.braintreegateway.com/web/3.60.0/js/client.min.js"></script>
+<script src="https://js.braintreegateway.com/web/3.60.0/js/paypal-checkout.min.js"></script>
+<script src="https://js.braintreegateway.com/web/3.60.0/js/data-collector.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <div id="paypal-button"></div><br>
+    <div id="result"></div><br>
+    <div id="sale_result"></div><br>
+
+<script type="text/javascript">
+$.get( "getToken.php", function( data ) {
+        var clientToken = data;
+        braintree.client.create({authorization: clientToken}, function (clientErr, clientInstance) {
+		  	braintree.paypalCheckout.create({client: clientInstance}, function (paypalCheckoutErr, paypalCheckoutInstance) {
+				    return paypal.Buttons({
+					    createOrder: function () {
+					      return paypalCheckoutInstance.createPayment({
+						flow: 'checkout',
+						currency: 'USD',
+						amount: '10.00',
+						intent: 'sale' // this value must either be `capture` or match the intent passed into the PayPal SDK intent query parameter
+						// your other createPayment options here
+					      });//.then((res)=> {console.log(res);});
+					      //.then((res)=>{return res.json();}).then((data)=>{console.log(data);});
+					    },
+
+					    onApprove: function (data, actions) {
+					      return paypalCheckoutInstance.tokenizePayment(data).then(function (payload) {
+					      	$.ajaxSetup({
+                                                      cache: false,
+                                                      async: false
+                                                });
+                                                var orderID = Math.floor(Math.random() * 10000) + 1;
+                                                console.log('order ID='+orderID);
+                                                $.ajax({
+                                                	type: "POST",
+                                                        url: 'transaction.php',
+                                                        data: {"payment_method_nonce": payload.nonce, "amount": 14.44, "orderId": orderID, "customField": "PayPal custom", "description": "test buyer"},
+                                                        success: function(response){
+                                                            console.log('Data submit worked. Response was:\n' + response);
+                                                            $('#sale_result').html(response);
+                                                        }
+                                                 });
+					      }).catch(function(error){
+                                                if (error === 'INSTRUMENT_DECLINED') {
+                                                        actions.restart();
+                                                }
+						});
+					    },
+						
+					    onCancel: function () {
+					      // handle case where user cancels
+					    },
+
+					    onError: function (err) {
+					      // handle case where error occurs
+					    }
+  				    }).render('#paypal-button');
+				});
+	});
+});
+    </script>
+</body>
